@@ -9,59 +9,45 @@
         DOWN:40
     }
 
-    var items = 0;
+    var _jfocus;
 
-    function jfocus(root, options) {
-        items++;
+    //define default options values
+    var defaults = {
+        next: [39, 9],
+        prev: [37],
+        select: [13, 32],
+        cirular: false,
+        css: 'focused',
+        onfocus: null,
+        onselect: null
+    }
 
+    function jfocus(selector, options) {
         if(!options) options = {};
-        var defaults = {
-            next: ['RIGHT','TAB'],
-            prev: ['LEFT'],
-            select: ['SPACE','ENTER'],
-            cirular: false,
-            css: 'focused',
-            onfocus: function(elem) {},
-            onselect: function(elem) {}
-        };
-        var options = $.extend(defaults, options);
+        this._options = $.extend(defaults, options);
 
-        this._eventNamespace =  'jfocus_' + items;
-        
         var self = this;
-        this._root = root;
-        this._root.attr('jfocus_group', 'jfocus_group');
-        
-        this._curr;
-        this._matrix;
-        this._triggers;
-        this._callback;
-        this._defaultItem;
-        this._focusedItem;
-        
-        $(document).bind('keydown.' + this._eventNamespace, function (e) {
-            e.preventDefault();
+        this._selector = selector;
+
+        $(document).bind('keydown.jfocus', function (e) {
+            //e.preventDefault();
             self._onKeyDown(e);
         });
         
-        if (options) {
-            this._matrix = options.matrix;
-            this._triggers = options.triggers;
-            this._callback = options.callback;
-            this._defaultItem = $('[order][default]', this._root);
-            
-            if (this._defaultItem.length == 1) {
-                this._focus(this._defaultItem);
-            }
-        }
-        
+        //remove focused css class from all items
+        this._selector.removeClass(this._options.css);
+
+        //get first item (DOM) and focus it
+        this._focusedItem = this._selector.first();
+        this._focusedItem.addClass(this._options.css);
+
         return this;
     }
     
     jfocus.prototype = {
         
         disableItem:function () {
-            this._curr.attr('disabled', 'disabled');
+            this._curr.attr('jfocus_disabled', 'jfocus_disabled');
             
             if (this._focusedItem[0] == this._curr[0]) {
                 
@@ -81,31 +67,27 @@
         },
         
         enableItem:function () {
-            this._curr.removeAttr('disabled');
+            this._curr.removeAttr('jfocus_disabled');
             
             if (!this._focusedItem) {
                 this._focus(this._curr);
             }
         },
         
-        disableGroup: function() {
-            $(document).unbind('keydown.' + this._eventNamespace);
+        destroy: function() {
+            $(document).unbind('keydown.jfocus');
         },
         
         enableGroup: function() {
             var self = this;
-            $(document).bind('keydown.' + this._eventNamespace, function (e) {
+            $(document).bind('keydown.jfocus', function (e) {
                 e.preventDefault();
                 self._onKeyDown(e);
             });
         },
         
-        set_callback: function(callback) {
-          this._callback = callback;
-        },
-        
         _isEnabled: function(elem) {
-            return elem.attr('disabled') ? false : true;
+            return elem.attr('jfocus_disabled') ? false : true;
         },
         
         _focus:function (elem) {
@@ -123,176 +105,58 @@
             }
         },
         
-        _getItems:function () {
-            var items = $('[order]', this._root).sort(function(a,b) {
-                return parseInt($(a).attr('order')) - parseInt($(b).attr('order'));
-            });
-            
-            var head, curr;
-            
-            if (items.length > 0) {
-                head = curr = null;
-                
-                var self = this;
-                
-                items.each(function(index, elem) {
-                    if (!head) {
-                        head = curr = {elem: $(elem), next: null, prev: null, order: self._getOrder($(elem))};
-                    }
-                    else {
-                        curr.next = {elem: $(elem), next: null, prev: curr, order: self._getOrder($(elem))};
-                        curr = curr.next;
-                    }
-                });
-                
-                if (items.length > 1) {
-                    curr.next = head;
-                    head.prev = curr;
-                }
-            }
-            
-            return head;
-        },
-        
         _onKeyDown:function (e) {
-            
-            if ($.inArray(e.keyCode, this._triggers) != -1 && this._callback) {
-                this._callback.call(this, e, this._focusedItem);
-            }
-            
-            var nextItem = this._getNextItem(e.keyCode);
-            if (nextItem) {
-                this._focus(nextItem);
-            }
-        },
-        
-        _getNextItem: function(keyCode) {
-            
-            var currentOrder = this._getOrder(this._focusedItem);
-            var head = this._getItems();
-            
-            if (!currentOrder || !head.next)
-                return this._defaultItem;
-            
-            switch (keyCode) {
-                case KEY_CODES.UP:
-                    if ( this._matrix[0] > 1 ) {
-                        var curr = head;
-                        
-                        while(curr.order != currentOrder) {
-                            curr = curr.next;
-                        }
-                        
-                        var items_count = this._matrix[1];
-                        
-                        while (items_count > 0) {
-                            curr = curr.prev;
-                            items_count--;
-                        }
-                        
-                        var remainingItems = this._matrix[0] * this._matrix[1] - items_count;
-                        
-                        while ((!this._isEnabled(curr.elem) || ! curr.elem.is(':visible')) && remainingItems-- > 1) {
-                            curr = curr.prev;
-                        }
-                        
-                        return this._isEnabled(curr.elem) ? curr.elem : null;
-                    }                    
-                    break;
-                
-                case KEY_CODES.DOWN:
-                    if ( this._matrix[0] > 1 ) {
-                        var curr = head;
-                        
-                        while(curr.order != currentOrder) {
-                            curr = curr.next;
-                        }
-                        
-                        var items_count = this._matrix[1];
-                        
-                        while (items_count > 0) {
-                            curr = curr.next;
-                            items_count--;
-                        }
-                        
-                        var remainingItems = this._matrix[0] * this._matrix[1] - items_count;
-                        
-                        while ((!this._isEnabled(curr.elem) || ! curr.elem.is(':visible')) && remainingItems-- > 1) {
-                            curr = curr.next;
-                        }
-                        
-                        return this._isEnabled(curr.elem) ? curr.elem : null;
-                    }                    
-                    break;
-                
-                case KEY_CODES.LEFT:
-                    if ( this._matrix[1] > 1 ) {
-                        var curr = head;
-                        
-                        while(curr.order != currentOrder) {
-                            curr = curr.next;
-                        }
-                        
-                        curr = curr.prev;
-                        
-                        var remainingItems = this._matrix[0] * this._matrix[1] - 1;
-                        
-                        while ((!this._isEnabled(curr.elem) || ! curr.elem.is(':visible')) && remainingItems-- > 1) {
-                            curr = curr.prev;
-                        }
-                        
-                        return this._isEnabled(curr.elem) ? curr.elem : null;
+            var last = this._focusedItem;
+
+            if ($.inArray(e.keyCode, this._options.next) != -1) {
+                this._focusedItem.removeClass(this._options.css);
+                this._focusedItem = this._focusedItem.next();
+
+                if (this._focusedItem.length == 0) {
+                    if (this._options.cirular) {
+                        this._focusedItem = this._selector.first();
+                    } else {
+                        this._focusedItem = last;
                     }
-                    break;
-                
-                case KEY_CODES.RIGHT:
-                    if ( this._matrix[1] > 1 ) {
-                        var curr = head;
-                        
-                        while(curr.order != currentOrder) {
-                            curr = curr.next;
-                        }
-                        
-                        curr = curr.next;
-                        
-                        var remainingItems = this._matrix[0] * this._matrix[1] - 1;
-                        
-                        while ((!this._isEnabled(curr.elem) || ! curr.elem.is(':visible')) && remainingItems-- > 1) {
-                            curr = curr.next;
-                        }
-                        
-                        return this._isEnabled(curr.elem) ? curr.elem : null;
-                    }
-                    break;
+                }
+                this._focusedItem.addClass(this._options.css);
             }
-        },
-        
-        _getOrder: function(elem) {
-            return parseInt(elem.attr('order'));
+
+            if ($.inArray(e.keyCode, this._options.prev) != -1) {
+                this._focusedItem.removeClass(this._options.css);
+                this._focusedItem = this._focusedItem.prev();
+
+                if (this._focusedItem.length == 0) {
+                    if (this._options.cirular) {
+                        this._focusedItem = this._selector.last();
+                    } else {
+                        this._focusedItem = last;
+                    }
+                }
+                this._focusedItem.addClass(this._options.css);
+            }
+
+            if (this._focusedItem != last && this._options.onfocus) {
+                this._options.onfocus.call(this, this._focusedItem);
+            }
+
+            if ($.inArray(e.keyCode, this._options.select) != -1 && this._options.onselect) {
+                this._options.onselect.call(this, this._focusedItem);
+            }
         }
     }
 
     $.fn.jfocus = function () {
-        var jf;
         if (arguments.length == 1) {
-            
-            var currInstance = this.data('jfocus');
-            
-            if (currInstance) {
-                currInstance.disableGroup();
+            if (_jfocus) {
+                _jfocus.destroy();
             }
-            
-            jf = new jfocus(this, arguments[0]);
-            this.data('jfocus', jf);
+            _jfocus = new jfocus(this, arguments[0]);
+        } else {
+            _jfocus._selectedItems = this;
         }
-        else {
-            jf = this.closest('[jfocus_group]').data('jfocus');
-            
-            if (jf) {
-                jf._curr = this;
-            }
-        }
-        return jf;
+
+        return _jfocus;
     }
 
 })(jQuery);
