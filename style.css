@@ -1,0 +1,15 @@
+.box {
+    width: 100px;
+    height: 100px;
+    float: left;
+    margin: 10px;
+    text-align: center;
+    font-size: 32px;
+    line-height: 100px;
+    background: #00ffff;
+    border: solid 3px #000;
+    color: #000;
+}
+.box.focused {
+    background: #fff000;
+}
