@@ -1,13 +1,23 @@
+/*
+(function() {
+    var ev = new $.Event('remove'), orig = $.fn.remove;
+    $.fn.remove = function() {
+        $(this).trigger(ev);
+        orig.apply(this, arguments);
+    }
+})();
+*/
+
 (function ($) {
     var _jfocus;
 
     //define default options values
     var defaults = {
-        next: [39, 9],
+        next: [39],
         prev: [37],
         select: [13, 32],
         cirular: false,
-        css: 'focused',
+        css: 'jfocus_focused',
         onfocus: null,
         onselect: null
     }
@@ -27,11 +37,23 @@
             this._selector = selector;
 
             $(document).bind('keydown.jfocus', function (e) {
-                if (e.keyCode == KEY_CODES.TAB)
+                if (e.keyCode == 9)
                     e.preventDefault();
 
                 self._onKeyDown(e);
             });
+
+            /*
+            $(this._selector.selector).live('remove', function() {
+                var elem = $(this);
+                if (elem[0] == self._focusedItem[0]) {
+                    self._focusPrev();
+                    console.log('remove focused');
+                } else {
+                    console.log('remove');
+                }
+            });
+            */
 
             //remove focused css class from all items
             this._selector.removeClass(this._options.css);
@@ -111,36 +133,58 @@
             }
             */
         },
-        
-        _onKeyDown:function (e) {
+
+        _focusNext:function () {
             var last = this._focusedItem;
 
-            if ($.inArray(e.keyCode, this._options.next) != -1) {
-                this._focusedItem.removeClass(this._options.css);
+            this._focusedItem.removeClass(this._options.css);
+            this._focusedItem = this._focusedItem.next();
+
+            while (!this._focusedItem.is(':visible') && this._focusedItem != last) {
                 this._focusedItem = this._focusedItem.next();
 
                 if (this._focusedItem.length == 0) {
                     if (this._options.cirular) {
-                        this._focusedItem = this._selector.first();
+                        this._focusedItem = $(this._selector.selector).first();
                     } else {
                         this._focusedItem = last;
                     }
                 }
-                this._focusedItem.addClass(this._options.css);
             }
 
-            if ($.inArray(e.keyCode, this._options.prev) != -1) {
-                this._focusedItem.removeClass(this._options.css);
+            this._focusedItem.addClass(this._options.css);
+        },
+
+        _focusPrev:function () {
+            var last = this._focusedItem;
+
+            this._focusedItem.removeClass(this._options.css);
+            this._focusedItem = this._focusedItem.prev();
+
+            while (!this._focusedItem.is(':visible') && this._focusedItem != last) {
                 this._focusedItem = this._focusedItem.prev();
 
                 if (this._focusedItem.length == 0) {
                     if (this._options.cirular) {
-                        this._focusedItem = this._selector.last();
+                        this._focusedItem = $(this._selector.selector).last();
                     } else {
                         this._focusedItem = last;
                     }
                 }
-                this._focusedItem.addClass(this._options.css);
+            }
+
+            this._focusedItem.addClass(this._options.css);
+        },
+
+        _onKeyDown:function (e) {
+            var last = this._focusedItem;
+
+            if ($.inArray(e.keyCode, this._options.next) != -1) {
+                this._focusNext();
+            }
+
+            if ($.inArray(e.keyCode, this._options.prev) != -1) {
+                this._focusPrev();
             }
 
             if (this._focusedItem != last && this._options.onfocus) {
@@ -160,6 +204,7 @@
             }
             _jfocus = new jfocus(this, arguments[0]);
         } else {
+            console.log(_jfocus._focusedItem);
             _jfocus._selectedItems = this;
         }
 

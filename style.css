@@ -10,6 +10,6 @@
     border: solid 3px #000;
     color: #000;
 }
-.box.focused {
+.box.jfocus_focused {
     background: #fff000;
 }

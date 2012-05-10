@@ -19,25 +19,51 @@
 
         $(document).ready(function() {
             $('.box').jfocus({
-                next: [KEY_CODES.RIGHT, KEY_CODES.TAB],
+                next: [KEY_CODES.RIGHT],
                 prev: [KEY_CODES.LEFT],
                 select: [KEY_CODES.ENTER, KEY_CODES.SPACE],
                 cirular: true,
-                css: 'focused',
-                onfocus: function(elem) { console.log('focus changed'); },
-                onselect: function(elem) { console.log('item selected'); }
+                css: 'jfocus_focused',
+                onfocus: function(elem) {
+                    console.log('focus changed');
+                },
+                onselect: function(elem) {
+                    console.log('item selected');
+                }
             });
         });
+
+        function addBox() {
+            $('ul').append('<li class="box">NEW</li>');
+        }
+        function removeBox() {
+            $('.box:visible').last().remove();
+        }
+        function hideBox() {
+            $('.box:visible').last().hide();
+            $('.box').jfocus();
+        }
+        function showBox() {
+            $('.box:not(:visible)').last().show();
+        }
     </script>
 </head>
 
 <body>
-    <div class="box">1</div>
-    <div class="box">2</div>
-    <div class="box">3</div>
-    <div class="box">4</div>
-    <div class="box">5</div>
-    <div class="box">6</div>
+    <ul>
+        <li class="box">1</li>
+        <li class="box">2</li>
+        <li class="box" style="display: none;">3</li>
+        <li class="box">4</li>
+        <li class="box">5</li>
+        <li class="box">6</li>
+        <li class="box" style="display: none;">7</li>
+    </ul>
+
+    <input type="button" value="Add" onclick="addBox();"/>
+    <input type="button" value="Remove" onclick="removeBox();"/>
+    <input type="button" value="Hide" onclick="hideBox();"/>
+    <input type="button" value="Show" onclick="showBox();"/>
 </body>
 
 </html>
