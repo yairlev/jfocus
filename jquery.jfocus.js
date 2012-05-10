@@ -1,14 +1,4 @@
 (function ($) {
-
-    KEY_CODES = {
-        ENTER:13,
-        SPACE:32,
-        LEFT:37,
-        UP:38,
-        RIGHT:39,
-        DOWN:40
-    }
-
     var _jfocus;
 
     //define default options values
@@ -23,30 +13,40 @@
     }
 
     function jfocus(selector, options) {
-        if(!options) options = {};
-        this._options = $.extend(defaults, options);
-
-        var self = this;
-        this._selector = selector;
-
-        $(document).bind('keydown.jfocus', function (e) {
-            //e.preventDefault();
-            self._onKeyDown(e);
-        });
-        
-        //remove focused css class from all items
-        this._selector.removeClass(this._options.css);
-
-        //get first item (DOM) and focus it
-        this._focusedItem = this._selector.first();
-        this._focusedItem.addClass(this._options.css);
-
+        this.init(selector, options);
         return this;
     }
     
     jfocus.prototype = {
-        
+
+        init: function(selector, options) {
+            if(!options) options = {};
+            this._options = $.extend(defaults, options);
+
+            var self = this;
+            this._selector = selector;
+
+            $(document).bind('keydown.jfocus', function (e) {
+                if (e.keyCode == KEY_CODES.TAB)
+                    e.preventDefault();
+
+                self._onKeyDown(e);
+            });
+
+            //remove focused css class from all items
+            this._selector.removeClass(this._options.css);
+
+            //get first item (DOM) and focus it
+            this._focusedItem = this._selector.first();
+            this._focusedItem.addClass(this._options.css);
+        },
+
+        destroy: function() {
+            $(document).unbind('keydown.jfocus');
+        },
+
         disableItem:function () {
+            /*
             this._curr.attr('jfocus_disabled', 'jfocus_disabled');
             
             if (this._focusedItem[0] == this._curr[0]) {
@@ -64,38 +64,44 @@
                 
                 this._unfocus(this._curr);
             }
+            */
         },
         
         enableItem:function () {
+            /*
             this._curr.removeAttr('jfocus_disabled');
             
             if (!this._focusedItem) {
                 this._focus(this._curr);
             }
+            */
         },
-        
-        destroy: function() {
-            $(document).unbind('keydown.jfocus');
-        },
-        
+
         enableGroup: function() {
+            /*
             var self = this;
             $(document).bind('keydown.jfocus', function (e) {
                 e.preventDefault();
                 self._onKeyDown(e);
             });
+            */
         },
         
         _isEnabled: function(elem) {
+            /*
             return elem.attr('jfocus_disabled') ? false : true;
+            */
         },
         
         _focus:function (elem) {
+            /*
             this._unfocus(this._focusedItem);
             this._focusedItem = elem.addClass('focused');
+            */
         },
         
         _unfocus:function (elem) {
+            /*
             if (elem) {
                 elem.removeClass('focused');
                 
@@ -103,6 +109,7 @@
                     this._focusedItem = null;
                 }
             }
+            */
         },
         
         _onKeyDown:function (e) {
