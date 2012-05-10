@@ -7,22 +7,32 @@
     <script type='text/javascript' src='jquery.jfocus.js'></script>
 
     <script type='text/javascript'>
+        KEY_CODES = {
+            ENTER:13,
+            SPACE:32,
+            TAB:9,
+            LEFT:37,
+            UP:38,
+            RIGHT:39,
+            DOWN:40
+        };
+
         $(document).ready(function() {
             $('.box').jfocus({
-                next: ['RIGHT','TAB'],
-                prev: ['LEFT'],
-                select: ['SPACE','ENTER'],
+                next: [KEY_CODES.RIGHT, KEY_CODES.TAB],
+                prev: [KEY_CODES.LEFT],
+                select: [KEY_CODES.ENTER, KEY_CODES.SPACE],
                 cirular: true,
                 css: 'focused',
-                onfocus: function(elem) {},
-                onselect: function(elem) {}
+                onfocus: function(elem) { console.log('focus changed'); },
+                onselect: function(elem) { console.log('item selected'); }
             });
         });
     </script>
 </head>
 
 <body>
-    <div class="box focused">1</div>
+    <div class="box">1</div>
     <div class="box">2</div>
     <div class="box">3</div>
     <div class="box">4</div>
